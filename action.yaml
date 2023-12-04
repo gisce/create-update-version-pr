@@ -1,32 +1,15 @@
 name: Create PR on dependent project
-
-on:
-  workflow_call:
-    inputs:
-      libraryName:
-        description: "Name of this library (e.g., gisce/commitlint-rules)"
-        type: string
-        required: true
-        default: "gisce/commitlint-rules"
-      dependentProject:
-        description: "Name of dependent projects (e.g., gisce/ooui.js)"
-        type: string
-        required: true
-        default: "gisce/ooui.js"
-      dependentProjectBranch:
-        description: "Name of the branch for the dependent project (e.g., alpha)"
-        type: string
-        required: true
-        default: "alpha"
-      tagName:
-        description: "Name of the tag (e.g., v1.0.0-alpha.0)"
-        type: string
-        required: true
-        default: "v1.0.0-alpha.0"
-      githubToken:
-        description: "GitHub token for authentication"
-        type: string
-        required: true
+inputs:
+  libraryName:
+    description: "Name of this library (e.g., gisce/commitlint-rules)"
+  dependentProject:
+    description: "Name of dependent projects (e.g., gisce/ooui.js)"
+  dependentProjectBranch:
+    description: "Name of the branch for the dependent project (e.g., alpha)"
+  tagName:
+    description: "Name of the tag (e.g., v1.0.0-alpha.0)"
+  githubToken:
+    description: "GitHub token for authentication"
 
 jobs:
   create-pr:
