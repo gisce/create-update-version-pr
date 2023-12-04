@@ -32,6 +32,7 @@ runs:
         NEW_VERSION=${{ inputs.tagName }}
         NEW_VERSION=${NEW_VERSION#v}  # Remove the leading 'v'
         sed -i 's|"@${{ inputs.libraryName }}": "[^"]*"|"@${{ inputs.libraryName }}": "'"$NEW_VERSION"'"|' package.json
+      shell: bash
 
     - name: Setup Node.js
       uses: actions/setup-node@v2
@@ -41,6 +42,7 @@ runs:
     - name: Install npm dependencies and generate package-lock.json
       run: |
         npm install
+      shell: bash
 
     - name: Format Library Name
       id: format-lib-name
@@ -48,6 +50,7 @@ runs:
         FORMATTED_NAME="${{ inputs.libraryName }}"
         FORMATTED_NAME="${FORMATTED_NAME//\//-}"
         echo "FORMATTED_NAME=$FORMATTED_NAME" >> $GITHUB_ENV
+      shell: bash
 
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v3
