@@ -1,53 +1,58 @@
-name: Create PR on dependent project
+name: "Create PR on Dependent Project"
+description: "Updates a dependent project with new library version and creates a pull request"
 inputs:
   libraryName:
     description: "Name of this library (e.g., gisce/commitlint-rules)"
+    required: true
   dependentProject:
     description: "Name of dependent projects (e.g., gisce/ooui.js)"
+    required: true
   dependentProjectBranch:
     description: "Name of the branch for the dependent project (e.g., alpha)"
+    required: true
   tagName:
     description: "Name of the tag (e.g., v1.0.0-alpha.0)"
+    required: true
   githubToken:
     description: "GitHub token for authentication"
+    required: true
 
-jobs:
-  create-pr:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout dependent project repository
-        uses: actions/checkout@v2
-        with:
-          repository: ${{ inputs.dependentProject }}
-          ref: ${{ inputs.dependentProjectBranch }}
-          token: ${{ inputs.githubToken }}
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout dependent project repository
+      uses: actions/checkout@v2
+      with:
+        repository: ${{ inputs.dependentProject }}
+        ref: ${{ inputs.dependentProjectBranch }}
+        token: ${{ inputs.githubToken }}
 
-      - name: Update library version in package.json
-        run: |
-          NEW_VERSION=${{ inputs.tagName }}
-          NEW_VERSION=${NEW_VERSION#v}  # Remove the leading 'v'
-          sed -i 's|"@${{ inputs.libraryName }}": "[^"]*"|"@${{ inputs.libraryName }}": "'"$NEW_VERSION"'"|' package.json
+    - name: Update library version in package.json
+      run: |
+        NEW_VERSION=${{ inputs.tagName }}
+        NEW_VERSION=${NEW_VERSION#v}  # Remove the leading 'v'
+        sed -i 's|"@${{ inputs.libraryName }}": "[^"]*"|"@${{ inputs.libraryName }}": "'"$NEW_VERSION"'"|' package.json
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: "20.5.0"
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: "20.5.0"
 
-      - name: Install npm dependencies and generate package-lock.json
-        run: |
-          npm install
+    - name: Install npm dependencies and generate package-lock.json
+      run: |
+        npm install
 
-      - name: Format Library Name
-        id: format-lib-name
-        run: |
-          FORMATTED_NAME="${{ inputs.libraryName }}"
-          FORMATTED_NAME="${FORMATTED_NAME//\//-}"
-          echo "FORMATTED_NAME=$FORMATTED_NAME" >> $GITHUB_ENV
+    - name: Format Library Name
+      id: format-lib-name
+      run: |
+        FORMATTED_NAME="${{ inputs.libraryName }}"
+        FORMATTED_NAME="${FORMATTED_NAME//\//-}"
+        echo "FORMATTED_NAME=$FORMATTED_NAME" >> $GITHUB_ENV
 
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
-        with:
-          token: ${{ inputs.githubToken }}
-          commit-message: "fix: update ${{ inputs.libraryName }} to ${{ inputs.tagName }}"
-          title: "update ${{ inputs.libraryName }} to ${{ inputs.tagName }}"
-          branch: "update-${{ env.FORMATTED_NAME }}-${{ inputs.tagName }}"
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v3
+      with:
+        token: ${{ inputs.githubToken }}
+        commit-message: "fix: update ${{ inputs.libraryName }} to ${{ inputs.tagName }}"
+        title: "update ${{ inputs.libraryName }} to ${{ inputs.tagName }}"
+        branch: "update-${{ env.FORMATTED_NAME }}-${{ inputs.tagName }}"
