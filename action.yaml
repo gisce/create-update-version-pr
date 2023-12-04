@@ -1,0 +1,88 @@
+name: Create PR on dependent project
+
+on:
+  workflow_call:
+    inputs:
+      libraryName:
+        description: "Name of this library (e.g., gisce/commitlint-rules)"
+        type: string
+        required: true
+        default: "gisce/commitlint-rules"
+      dependentProject:
+        description: "Name of dependent projects (e.g., gisce/ooui.js)"
+        type: string
+        required: true
+        default: "gisce/ooui.js"
+      dependentProjectBranch:
+        description: "Name of the branch for the dependent project (e.g., alpha)"
+        type: string
+        required: true
+        default: "alpha"
+      tagName:
+        description: "Name of the tag (e.g., v1.0.0-alpha.0)"
+        type: string
+        required: true
+        default: "v1.0.0-alpha.0"
+  workflow_dispatch:
+    inputs:
+      libraryName:
+        description: "Name of this library (e.g., gisce/commitlint-rules)"
+        type: string
+        required: true
+        default: "gisce/commitlint-rules"
+      dependentProject:
+        description: "Name of dependent projects (e.g., gisce/ooui.js)"
+        type: string
+        required: true
+        default: "gisce/ooui.js"
+      dependentProjectBranch:
+        description: "Name of the branch for the dependent project (e.g., alpha)"
+        type: string
+        required: true
+        default: "alpha"
+      tagName:
+        description: "Name of the tag (e.g., v1.0.0)"
+        type: string
+        required: true
+        default: "v1.0.0"
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout dependent project repository
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ github.event.inputs.dependentProject }}
+          ref: ${{ github.event.inputs.dependentProjectBranch }}
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Update library version in package.json
+        run: |
+          NEW_VERSION=${{ github.event.inputs.tagName }}
+          NEW_VERSION=${NEW_VERSION#v}  # Remove the leading 'v'
+          sed -i 's|"@${{ github.event.inputs.libraryName }}": "[^"]*"|"@${{ github.event.inputs.libraryName }}": "'"$NEW_VERSION"'"|' package.json
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "20.5.0"
+
+      - name: Install npm dependencies and generate package-lock.json
+        run: |
+          npm install
+
+      - name: Format Library Name
+        id: format-lib-name
+        run: |
+          FORMATTED_NAME="${{ github.event.inputs.libraryName }}"
+          FORMATTED_NAME="${FORMATTED_NAME//\//-}"
+          echo "FORMATTED_NAME=$FORMATTED_NAME" >> $GITHUB_ENV
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.GH_PAT }}
+          commit-message: "fix: update ${{ github.event.inputs.libraryName }} to ${{ github.event.inputs.tagName }}"
+          title: "update ${{ github.event.inputs.libraryName }} to ${{ github.event.inputs.tagName }}"
+          branch: "update-${{ env.FORMATTED_NAME }}-${{ github.event.inputs.tagName }}"
