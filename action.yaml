@@ -16,47 +16,16 @@ inputs:
   githubToken:
     description: "GitHub token for authentication"
     required: true
-  syncBranch:
-    description: "Branch name to sync version from (optional)"
-    required: false
-    default: ''
 
 runs:
   using: "composite"
   steps:
-    - name: Checkout sync branch
-      if: inputs.syncBranch != ''
-      uses: actions/checkout@v2
-      with:
-        repository: ${{ inputs.dependentProject }}
-        ref: ${{ inputs.syncBranch }}
-        token: ${{ inputs.githubToken }}
-
-    - name: Get parent version
-      if: inputs.syncBranch != ''
-      id: get_parent_version
-      run: |
-        PARENT_VERSION=$(jq -r '.version' package.json)
-        echo "PARENT_VERSION=$PARENT_VERSION" >> $GITHUB_ENV
-
     - name: Checkout dependent project repository
       uses: actions/checkout@v2
       with:
         repository: ${{ inputs.dependentProject }}
         ref: ${{ inputs.dependentProjectBranch }}
         token: ${{ inputs.githubToken }}
-
-    - name: Get child version
-      run: |
-        CHILD_VERSION=$(jq -r '.version' package.json)
-        echo "CHILD_VERSION=$CHILD_VERSION" >> $GITHUB_ENV
-
-    - name: Compare versions and update if necessary
-      if: env.PARENT_VERSION != '' && env.CHILD_VERSION != env.PARENT_VERSION
-      run: |
-        npm version ${{ env.PARENT_VERSION }}
-        git commit -am "Update version to ${{ env.PARENT_VERSION }}"
-        git push origin ${{ inputs.dependentProjectBranch }}
 
     - name: Update library version in package.json
       run: |
