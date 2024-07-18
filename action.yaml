@@ -16,6 +16,9 @@ inputs:
   githubToken:
     description: "GitHub token for authentication"
     required: true
+  releaseType:
+    description: "Type of release (e.g., minor, major, patch)"
+    required: true
 
 runs:
   using: "composite"
@@ -52,10 +55,30 @@ runs:
         echo "FORMATTED_NAME=$FORMATTED_NAME" >> $GITHUB_ENV
       shell: bash
 
+    - name: Determine Commit Message
+      id: commit-message
+      run: |
+        RELEASE_TYPE=${{ inputs.releaseType }}
+        if [[ "$RELEASE_TYPE" == "patch" ]]; then
+          PREFIX="fix"
+        elif [[ "$RELEASE_TYPE" == "minor" ]]; then
+          PREFIX="feat"
+        elif [[ "$RELEASE_TYPE" == "major" ]]; then
+          PREFIX="feat"
+          BREAKING_CHANGE="BREAKING CHANGE: bump major version"
+          echo "BREAKING_CHANGE=$BREAKING_CHANGE" >> $GITHUB_ENV
+        fi
+        echo "PREFIX=$PREFIX" >> $GITHUB_ENV
+      shell: bash
+
     - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v3
+      uses: peter-evans/create-pull-request@v6
       with:
         token: ${{ inputs.githubToken }}
-        commit-message: "fix: update ${{ inputs.libraryName }} to ${{ inputs.tagName }}"
+        commit-message: |
+          ${{ env.PREFIX }}: update ${{ inputs.libraryName }} to ${{ inputs.tagName }}
+
+          ${{ env.BREAKING_CHANGE }}
+          https://github.com/${{ inputs.libraryName }}/releases/tag/${{ inputs.tagName }}
         title: "update ${{ inputs.libraryName }} to ${{ inputs.tagName }}"
         branch: "update-${{ env.FORMATTED_NAME }}-${{ inputs.tagName }}"
