@@ -82,3 +82,5 @@ runs:
           https://github.com/${{ inputs.libraryName }}/releases/tag/${{ inputs.tagName }}
         title: "update ${{ inputs.libraryName }} to ${{ inputs.tagName }}"
         branch: "update-${{ env.FORMATTED_NAME }}-${{ inputs.tagName }}"
+        body: |
+          This PR updates [${{ inputs.libraryName }}](https://github.com/${{ inputs.libraryName }}) to [${{ inputs.tagName }}](https://github.com/${{ inputs.libraryName }}/releases/tag/${{ inputs.tagName }}).
