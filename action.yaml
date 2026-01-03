@@ -19,6 +19,10 @@ inputs:
   releaseType:
     description: "Type of release (e.g., minor, major, patch)"
     required: true
+  nodeVersion:
+    description: "Node.js version to use for npm install"
+    required: false
+    default: "24.12.0"
 
 runs:
   using: "composite"
@@ -40,7 +44,7 @@ runs:
     - name: Setup Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: "20.5.0"
+        node-version: ${{ inputs.nodeVersion }}
 
     - name: Install npm dependencies and generate package-lock.json
       run: |
